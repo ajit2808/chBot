@@ -1,14 +1,15 @@
-def chunk_texts(texts, chunk_size=1000, overlap=200):
+def chunk_texts(texts, chunk_size=200):
     chunks = []
+    buffer = ""
 
-    for text in texts:
-        if len(text) <= chunk_size:
-            chunks.append(text)
+    for row in texts:
+        if len(buffer) + len(row) < chunk_size:
+            buffer += row + "\n"
         else:
-            start = 0
-            while start < len(text):
-                end = start + chunk_size
-                chunks.append(text[start:end])
-                start += chunk_size - overlap
+            chunks.append(buffer.strip())
+            buffer = row + "\n"
+
+    if buffer:
+        chunks.append(buffer.strip())
 
     return chunks

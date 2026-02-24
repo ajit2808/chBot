@@ -1,25 +1,60 @@
-# Virtual Environment
-venv/
-
-# Environment variables
-.env
-
-# Python cache
+# ==============================
+# Python
+# ==============================
 __pycache__/
 *.pyc
+*.pyo
+*.pyd
+*.py[cod]
+*$py.class
 
-# FAISS / Vector DB files
-data/*.index
-data/*.npy
-data/uploads/
+# ==============================
+# Virtual Environment
+# ==============================
+venv/
+env/
+.venv/
+ENV/
 
+# ==============================
+# Environment Variables
+# ==============================
+.env
+.env.*
+
+# ==============================
+# Local Data / FAISS / Uploads
+# ==============================
+data/
+*.index
+*.npy
+*.faiss
+
+# ==============================
 # Logs
+# ==============================
 *.log
 
-# IDE
+# ==============================
+# OS Files
+# ==============================
+.DS_Store
+Thumbs.db
+
+# ==============================
+# VS Code / IDE
+# ==============================
 .vscode/
 .idea/
 
-# OS
-.DS_Store
-Thumbs.db
+# ==============================
+# Build / Distribution
+# ==============================
+build/
+dist/
+*.egg-info/
+
+# ==============================
+# Jupyter
+# ==============================
+.ipynb_checkpoints/

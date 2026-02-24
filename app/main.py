@@ -67,7 +67,14 @@ class Question(BaseModel):
 
 @app.post("/ask/")
 async def ask(payload: Question):
-    docs = retrieve(payload.question)
-    context = "\n".join(docs)
-    answer = generate_answer(context, payload.question)
-    return {"answer": answer}
+    try:
+        docs = retrieve(payload.question, top_k=15)
+
+        context = "\n\n".join(docs[:10])  # prevent token overload
+
+        answer = generate_answer(context, payload.question)
+
+        return {"answer": answer}
+
+    except Exception as e:
+        return {"error": str(e)}
