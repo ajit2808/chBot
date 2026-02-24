@@ -1,0 +1,15 @@
+fastapi
+uvicorn
+anthropic
+python-dotenv
+python-multipart
+pandas
+openpyxl
+xlrd
+python-pptx
+numpy
+pydantic
+jinja2
+sentence-transformers
+faiss-cpu
+aiofiles

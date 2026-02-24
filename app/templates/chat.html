@@ -1,0 +1,325 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Claude Enterprise RAG</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+
+    <style>
+        body {
+            margin: 0;
+            font-family: "Inter", "Segoe UI", sans-serif;
+            background: linear-gradient(135deg, #e6f0ff, #f7fbff);
+            display: flex;
+            height: 100vh;
+        }
+
+        .sidebar {
+            width: 240px;
+            background: linear-gradient(180deg, #0f172a, #1e293b);
+            color: white;
+            padding: 25px 20px;
+            display: flex;
+            flex-direction: column;
+        }
+
+        .sidebar h2 {
+            margin-bottom: 30px;
+            font-size: 18px;
+        }
+
+        .nav-item {
+            padding: 12px;
+            border-radius: 8px;
+            margin-bottom: 10px;
+            cursor: pointer;
+            transition: 0.2s;
+        }
+
+        .nav-item:hover {
+            background: rgba(255,255,255,0.1);
+        }
+
+        .main {
+            flex: 1;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            padding: 30px;
+        }
+
+        .chat-container {
+            width: 900px;
+            height: 85vh;
+            background: rgba(255,255,255,0.95);
+            border-radius: 20px;
+            box-shadow: 0 20px 40px rgba(0,0,0,0.1);
+            display: flex;
+            flex-direction: column;
+            padding: 25px;
+        }
+
+        .header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .upload-section {
+            margin: 15px 0;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .upload-btn {
+            background: #2563eb;
+            color: white;
+            border: none;
+            padding: 8px 14px;
+            border-radius: 8px;
+            cursor: pointer;
+        }
+
+        .upload-btn:disabled {
+            opacity: 0.6;
+            cursor: not-allowed;
+        }
+
+        .status-text {
+            font-size: 14px;
+        }
+
+        .chat-box {
+            flex: 1;
+            overflow-y: auto;
+            padding: 15px;
+            border-radius: 12px;
+            background: #f9fafb;
+            margin-top: 10px;
+            display: flex;
+            flex-direction: column;
+        }
+
+        .message {
+            margin-bottom: 15px;
+            max-width: 70%;
+            padding: 12px 16px;
+            border-radius: 15px;
+            font-size: 14px;
+        }
+
+        .user {
+            background: #2563eb;
+            color: white;
+            align-self: flex-end;
+        }
+
+        .bot {
+            background: #e2e8f0;
+            color: #111827;
+            align-self: flex-start;
+        }
+
+        .input-area {
+            display: flex;
+            gap: 10px;
+            margin-top: 15px;
+        }
+
+        .input-area input {
+            flex: 1;
+            padding: 12px;
+            border-radius: 12px;
+            border: 1px solid #d1d5db;
+        }
+
+        .send-btn {
+            background: #10b981;
+            border: none;
+            padding: 12px 18px;
+            border-radius: 12px;
+            color: white;
+            font-weight: 600;
+            cursor: pointer;
+        }
+
+        .send-btn:hover {
+            background: #059669;
+        }
+
+        .footer {
+            text-align: center;
+            font-size: 12px;
+            color: #6b7280;
+            margin-top: 10px;
+        }
+    </style>
+</head>
+<body>
+
+<div class="sidebar">
+    <h2>Claude RAG</h2>
+    <div class="nav-item">Dashboard</div>
+    <div class="nav-item">Conversations</div>
+    <div class="nav-item">Analytics</div>
+    <div class="nav-item">Settings</div>
+</div>
+
+<div class="main">
+    <div class="chat-container">
+
+        <div class="header">
+            <h3>Your AI Assistant</h3>
+        </div>
+
+        <div class="upload-section">
+            <input type="file" id="fileInput" onchange="showFileName()">
+            <button class="upload-btn" id="uploadBtn" onclick="uploadFile()">Upload Document</button>
+
+            <span id="fileName" class="status-text"></span>
+            <span id="uploadStatus" class="status-text"></span>
+        </div>
+
+        <div id="chat" class="chat-box"></div>
+
+        <div class="input-area">
+            <input type="text" id="question" placeholder="Type your message...">
+            <button class="send-btn" onclick="askQuestion()">Send</button>
+        </div>
+
+        <div class="footer">
+            Powered by Claude Sonnet 4.6 | Enterprise RAG Architecture
+        </div>
+
+    </div>
+</div>
+
+<script>
+
+function showFileName() {
+    const fileInput = document.getElementById("fileInput");
+    const fileName = document.getElementById("fileName");
+
+    fileName.textContent = fileInput.files.length
+        ? fileInput.files[0].name
+        : "";
+}
+
+async function uploadFile() {
+    const fileInput = document.getElementById("fileInput");
+    const status = document.getElementById("uploadStatus");
+    const uploadBtn = document.getElementById("uploadBtn");
+
+    if (!fileInput.files.length) {
+        status.style.color = "red";
+        status.textContent = "Please select a file.";
+        clearStatus();
+        return;
+    }
+
+    uploadBtn.disabled = true;
+    status.style.color = "#2563eb";
+    status.textContent = "Uploading...";
+
+    const formData = new FormData();
+    formData.append("file", fileInput.files[0]);
+
+    try {
+        const response = await fetch("/upload/", {
+            method: "POST",
+            body: formData
+        });
+
+        const result = await response.json();
+
+        if (result.error) {
+            status.style.color = "red";
+            status.textContent = result.error;
+            uploadBtn.disabled = false;
+            clearStatus();
+            return;
+        }
+
+        status.style.color = "#16a34a";
+        status.textContent = "File uploaded successfully ✔ Processing started...";
+
+    } catch (error) {
+        status.style.color = "red";
+        status.textContent = "Upload failed.";
+        uploadBtn.disabled = false;
+        clearStatus();
+    }
+}
+
+async function checkProgress() {
+    try {
+        const res = await fetch("/progress/");
+        const data = await res.json();
+
+        const status = document.getElementById("uploadStatus");
+        const uploadBtn = document.getElementById("uploadBtn");
+
+        if (data.status === "processing") {
+            status.style.color = "#2563eb";
+            status.textContent = "Indexing: " + data.progress + "%";
+        }
+
+        if (data.status === "complete") {
+            status.style.color = "#16a34a";
+            status.textContent = "Indexing complete ✔";
+            uploadBtn.disabled = false;
+            clearStatus();
+        }
+    } catch (e) {}
+}
+
+setInterval(checkProgress, 2000);
+
+function clearStatus() {
+    setTimeout(() => {
+        document.getElementById("uploadStatus").textContent = "";
+    }, 5000);
+}
+
+async function askQuestion() {
+    const input = document.getElementById("question");
+    const question = input.value.trim();
+    const chat = document.getElementById("chat");
+
+    if (!question) return;
+
+    chat.innerHTML += `<div class="message user">${question}</div>`;
+
+    const typing = document.createElement("div");
+    typing.className = "message bot";
+    typing.textContent = "Thinking...";
+    chat.appendChild(typing);
+
+    const response = await fetch("/ask/", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ question })
+    });
+
+    const result = await response.json();
+    typing.remove();
+
+    if (result.answer) {
+        chat.innerHTML += `<div class="message bot">${result.answer}</div>`;
+    }
+
+    chat.scrollTop = chat.scrollHeight;
+    input.value = "";
+}
+
+document.getElementById("question").addEventListener("keydown", function(e) {
+    if (e.key === "Enter") {
+        e.preventDefault();
+        askQuestion();
+    }
+});
+
+</script>
+
+</body>
+</html>
